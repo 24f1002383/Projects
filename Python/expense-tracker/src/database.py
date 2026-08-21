@@ -12,7 +12,8 @@ def get_connection():
 def create_table():
     connection = get_connection()
 
-    connection.execute("""
+    connection.execute(
+        """
         CREATE TABLE IF NOT EXISTS expenses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             amount REAL NOT NULL,
@@ -20,7 +21,8 @@ def create_table():
             description TEXT,
             date TEXT NOT NULL
         )
-    """)
+        """
+    )
 
     connection.commit()
     connection.close()
@@ -67,7 +69,7 @@ def get_expenses():
 def update_expense(expense_id, amount, category, description, date):
     connection = get_connection()
 
-    connection.execute(
+    cursor = connection.execute(
         """
         UPDATE expenses
         SET amount = ?, category = ?, description = ?, date = ?
@@ -83,13 +85,18 @@ def update_expense(expense_id, amount, category, description, date):
     )
 
     connection.commit()
+
+    updated = cursor.rowcount
+
     connection.close()
+
+    return updated
 
 
 def delete_expense(expense_id):
     connection = get_connection()
 
-    connection.execute(
+    cursor = connection.execute(
         """
         DELETE FROM expenses
         WHERE id = ?
@@ -98,7 +105,12 @@ def delete_expense(expense_id):
     )
 
     connection.commit()
+
+    deleted = cursor.rowcount
+
     connection.close()
+
+    return deleted
 
 
 def get_total_expenses():

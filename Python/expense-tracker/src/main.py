@@ -48,6 +48,7 @@ def add_new_expense():
         )
 
         add_expense(expense)
+
         print("Expense added successfully.")
 
     except ValueError:
@@ -66,7 +67,7 @@ def view_expenses():
     for expense in expenses:
         print(
             f"ID: {expense[0]} | "
-            f"Amount: {expense[1]} | "
+            f"Amount: {expense[1]:.2f} | "
             f"Category: {expense[2]} | "
             f"Description: {expense[3]} | "
             f"Date: {expense[4]}"
@@ -94,7 +95,7 @@ def update_existing_expense():
             print("Invalid date format. Use YYYY-MM-DD.")
             return
 
-        update_expense(
+        updated = update_expense(
             expense_id,
             amount,
             category,
@@ -102,7 +103,10 @@ def update_existing_expense():
             date,
         )
 
-        print("Expense updated successfully.")
+        if updated:
+            print("Expense updated successfully.")
+        else:
+            print("Expense not found.")
 
     except ValueError:
         print("Please enter valid values.")
@@ -111,8 +115,13 @@ def update_existing_expense():
 def delete_existing_expense():
     try:
         expense_id = int(input("Enter expense ID: "))
-        delete_expense(expense_id)
-        print("Expense deleted successfully.")
+
+        deleted = delete_expense(expense_id)
+
+        if deleted:
+            print("Expense deleted successfully.")
+        else:
+            print("Expense not found.")
 
     except ValueError:
         print("Please enter a valid expense ID.")
@@ -120,7 +129,8 @@ def delete_existing_expense():
 
 def show_total_expenses():
     total = get_total_expenses()
-    print(f"Total Expenses: {total:.2f}")
+
+    print(f"\nTotal Expenses: {total:.2f}")
 
 
 def show_category_totals():

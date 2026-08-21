@@ -11,6 +11,7 @@ sys.path.insert(
 )
 
 import database
+
 from database import (
     create_table,
     add_expense,
@@ -20,17 +21,19 @@ from database import (
     get_total_expenses,
     get_category_totals,
 )
+
 from expense import Expense
 
 
 class TestDatabase(unittest.TestCase):
 
     def setUp(self):
+        self.original_db = database.DATABASE
+
         self.test_db = tempfile.NamedTemporaryFile(
             suffix=".db",
             delete=False
         )
-
         self.test_db.close()
 
         database.DATABASE = self.test_db.name
@@ -38,6 +41,8 @@ class TestDatabase(unittest.TestCase):
         create_table()
 
     def tearDown(self):
+        database.DATABASE = self.original_db
+
         if os.path.exists(self.test_db.name):
             os.remove(self.test_db.name)
 
@@ -94,7 +99,7 @@ class TestDatabase(unittest.TestCase):
         expenses = get_expenses()
         expense_id = expenses[0][0]
 
-        update_expense(
+        updated = update_expense(
             expense_id,
             1200,
             "Shopping",
@@ -102,11 +107,25 @@ class TestDatabase(unittest.TestCase):
             "2026-08-22"
         )
 
-        updated_expenses = get_expenses()
+        self.assertEqual(updated, 1)
 
-        self.assertEqual(updated_expenses[0][1], 1200)
-        self.assertEqual(updated_expenses[0][3], "New shoes")
-        self.assertEqual(updated_expenses[0][4], "2026-08-22")
+        expenses = get_expenses()
+
+        self.assertEqual(expenses[0][1], 1200)
+        self.assertEqual(expenses[0][2], "Shopping")
+        self.assertEqual(expenses[0][3], "New shoes")
+        self.assertEqual(expenses[0][4], "2026-08-22")
+
+    def test_update_nonexistent_expense(self):
+        updated = update_expense(
+            999,
+            1000,
+            "Food",
+            "Test",
+            "2026-08-21"
+        )
+
+        self.assertEqual(updated, 0)
 
     def test_delete_expense(self):
         expense = Expense(
@@ -121,11 +140,18 @@ class TestDatabase(unittest.TestCase):
         expenses = get_expenses()
         expense_id = expenses[0][0]
 
-        delete_expense(expense_id)
+        deleted = delete_expense(expense_id)
+
+        self.assertEqual(deleted, 1)
 
         expenses = get_expenses()
 
         self.assertEqual(len(expenses), 0)
+
+    def test_delete_nonexistent_expense(self):
+        deleted = delete_expense(999)
+
+        self.assertEqual(deleted, 0)
 
     def test_total_expenses(self):
         expense1 = Expense(
