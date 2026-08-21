@@ -56,6 +56,43 @@ def get_expenses():
     )
 
     expenses = cursor.fetchall()
+
     connection.close()
 
     return expenses
+
+
+def update_expense(expense_id, amount, category, description, date):
+    connection = get_connection()
+
+    connection.execute(
+        """
+        UPDATE expenses
+        SET amount = ?, category = ?, description = ?, date = ?
+        WHERE id = ?
+        """,
+        (
+            amount,
+            category,
+            description,
+            date,
+            expense_id,
+        ),
+    )
+
+    connection.commit()
+    connection.close()
+
+def delete_expense(expense_id):
+    connection = get_connection()
+
+    connection.execute(
+        """
+        DELETE FROM expenses
+        WHERE id = ?
+        """,
+        (expense_id,),
+    )
+
+    connection.commit()
+    connection.close()
