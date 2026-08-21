@@ -83,6 +83,7 @@ def update_expense(expense_id, amount, category, description, date):
     connection.commit()
     connection.close()
 
+
 def delete_expense(expense_id):
     connection = get_connection()
 
@@ -96,3 +97,36 @@ def delete_expense(expense_id):
 
     connection.commit()
     connection.close()
+
+
+def get_total_expenses():
+    connection = get_connection()
+
+    cursor = connection.execute(
+        "SELECT COALESCE(SUM(amount), 0) FROM expenses"
+    )
+
+    total = cursor.fetchone()[0]
+
+    connection.close()
+
+    return total
+
+
+def get_category_totals():
+    connection = get_connection()
+
+    cursor = connection.execute(
+        """
+        SELECT category, SUM(amount)
+        FROM expenses
+        GROUP BY category
+        ORDER BY category
+        """
+    )
+
+    category_totals = cursor.fetchall()
+
+    connection.close()
+
+    return category_totals

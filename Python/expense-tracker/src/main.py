@@ -4,7 +4,9 @@ from database import (
     add_expense,
     create_table,
     delete_expense,
+    get_category_totals,
     get_expenses,
+    get_total_expenses,
     update_expense,
 )
 from expense import Expense
@@ -116,6 +118,24 @@ def delete_existing_expense():
         print("Please enter a valid expense ID.")
 
 
+def show_total_expenses():
+    total = get_total_expenses()
+    print(f"Total Expenses: {total:.2f}")
+
+
+def show_category_totals():
+    category_totals = get_category_totals()
+
+    if not category_totals:
+        print("No expenses found.")
+        return
+
+    print("\n===== Category Summary =====")
+
+    for category, total in category_totals:
+        print(f"{category}: {total:.2f}")
+
+
 def main():
     create_table()
 
@@ -125,7 +145,9 @@ def main():
         print("2. View Expenses")
         print("3. Update Expense")
         print("4. Delete Expense")
-        print("5. Exit")
+        print("5. Total Expenses")
+        print("6. Category Summary")
+        print("7. Exit")
 
         choice = input("Enter your choice: ").strip()
 
@@ -142,6 +164,12 @@ def main():
             delete_existing_expense()
 
         elif choice == "5":
+            show_total_expenses()
+
+        elif choice == "6":
+            show_category_totals()
+
+        elif choice == "7":
             print("Goodbye!")
             break
 
