@@ -7,6 +7,8 @@ from database import (
     get_category_totals,
     get_expenses,
     get_total_expenses,
+    search_expenses,
+    search_expenses_by_date,
     update_expense,
 )
 from expense import Expense
@@ -146,6 +148,78 @@ def show_category_totals():
         print(f"{category}: {total:.2f}")
 
 
+def search_existing_expenses():
+    category = input("Enter category to search: ").strip()
+
+    if not category:
+        print("Category cannot be empty.")
+        return
+
+    expenses = search_expenses(category)
+
+    if not expenses:
+        print("No expenses found.")
+        return
+
+    print("\n===== Search Results =====")
+
+    for expense in expenses:
+        print(
+            f"ID: {expense[0]} | "
+            f"Amount: {expense[1]:.2f} | "
+            f"Category: {expense[2]} | "
+            f"Description: {expense[3]} | "
+            f"Date: {expense[4]}"
+        )
+
+
+def search_expenses_by_date_menu():
+    date = input("Enter date (YYYY-MM-DD): ").strip()
+
+    if not validate_date(date):
+        print("Invalid date format. Use YYYY-MM-DD.")
+        return
+
+    expenses = search_expenses_by_date(date)
+
+    if not expenses:
+        print("No expenses found.")
+        return
+
+    print("\n===== Date Search Results =====")
+
+    for expense in expenses:
+        print(
+            f"ID: {expense[0]} | "
+            f"Amount: {expense[1]:.2f} | "
+            f"Category: {expense[2]} | "
+            f"Description: {expense[3]} | "
+            f"Date: {expense[4]}"
+        )
+
+
+def search_menu():
+    while True:
+        print("\n===== Search Expenses =====")
+        print("1. Search by Category")
+        print("2. Search by Date")
+        print("3. Back")
+
+        choice = input("Enter your choice: ").strip()
+
+        if choice == "1":
+            search_existing_expenses()
+
+        elif choice == "2":
+            search_expenses_by_date_menu()
+
+        elif choice == "3":
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
+
+
 def main():
     create_table()
 
@@ -157,7 +231,8 @@ def main():
         print("4. Delete Expense")
         print("5. Total Expenses")
         print("6. Category Summary")
-        print("7. Exit")
+        print("7. Search Expenses")
+        print("8. Exit")
 
         choice = input("Enter your choice: ").strip()
 
@@ -180,6 +255,9 @@ def main():
             show_category_totals()
 
         elif choice == "7":
+            search_menu()
+
+        elif choice == "8":
             print("Goodbye!")
             break
 

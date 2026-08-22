@@ -117,7 +117,10 @@ def get_total_expenses():
     connection = get_connection()
 
     cursor = connection.execute(
-        "SELECT COALESCE(SUM(amount), 0) FROM expenses"
+        """
+        SELECT COALESCE(SUM(amount), 0)
+        FROM expenses
+        """
     )
 
     total = cursor.fetchone()[0]
@@ -144,3 +147,43 @@ def get_category_totals():
     connection.close()
 
     return category_totals
+
+
+def search_expenses(category):
+    connection = get_connection()
+
+    cursor = connection.execute(
+        """
+        SELECT id, amount, category, description, date
+        FROM expenses
+        WHERE LOWER(category) = LOWER(?)
+        ORDER BY id
+        """,
+        (category,),
+    )
+
+    expenses = cursor.fetchall()
+
+    connection.close()
+
+    return expenses
+
+
+def search_expenses_by_date(date):
+    connection = get_connection()
+
+    cursor = connection.execute(
+        """
+        SELECT id, amount, category, description, date
+        FROM expenses
+        WHERE date = ?
+        ORDER BY id
+        """,
+        (date,),
+    )
+
+    expenses = cursor.fetchall()
+
+    connection.close()
+
+    return expenses

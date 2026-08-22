@@ -20,6 +20,8 @@ from database import (
     delete_expense,
     get_total_expenses,
     get_category_totals,
+    search_expenses,
+    search_expenses_by_date,
 )
 
 from expense import Expense
@@ -205,6 +207,70 @@ class TestDatabase(unittest.TestCase):
 
         self.assertEqual(category_totals["Food"], 500)
         self.assertEqual(category_totals["Travel"], 500)
+
+    def test_search_expenses(self):
+        expense1 = Expense(
+            500,
+            "Food",
+            "Lunch",
+            "2026-08-21"
+        )
+
+        expense2 = Expense(
+            750,
+            "Travel",
+            "Bus ticket",
+            "2026-08-21"
+        )
+
+        expense3 = Expense(
+            300,
+            "Food",
+            "Snacks",
+            "2026-08-22"
+        )
+
+        add_expense(expense1)
+        add_expense(expense2)
+        add_expense(expense3)
+
+        expenses = search_expenses("Food")
+
+        self.assertEqual(len(expenses), 2)
+        self.assertEqual(expenses[0][2], "Food")
+        self.assertEqual(expenses[1][2], "Food")
+
+    def test_search_expenses_by_date(self):
+        expense1 = Expense(
+            500,
+            "Food",
+            "Lunch",
+            "2026-08-21"
+        )
+
+        expense2 = Expense(
+            750,
+            "Travel",
+            "Bus ticket",
+            "2026-08-21"
+        )
+
+        expense3 = Expense(
+            300,
+            "Food",
+            "Snacks",
+            "2026-08-22"
+        )
+
+        add_expense(expense1)
+        add_expense(expense2)
+        add_expense(expense3)
+
+        expenses = search_expenses_by_date("2026-08-21")
+
+        self.assertEqual(len(expenses), 2)
+        self.assertEqual(expenses[0][4], "2026-08-21")
+        self.assertEqual(expenses[1][4], "2026-08-21")
 
 
 if __name__ == "__main__":
