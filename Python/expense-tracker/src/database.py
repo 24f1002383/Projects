@@ -187,3 +187,41 @@ def search_expenses_by_date(date):
     connection.close()
 
     return expenses
+
+def get_monthly_summary(month):
+    connection = get_connection()
+
+    cursor = connection.execute(
+        """
+        SELECT category, SUM(amount)
+        FROM expenses
+        WHERE substr(date, 1, 7) = ?
+        GROUP BY category
+        ORDER BY category
+        """,
+        (month,),
+    )
+
+    summary = cursor.fetchall()
+
+    connection.close()
+
+    return summary
+
+def get_monthly_total(month):
+    connection = get_connection()
+
+    cursor = connection.execute(
+        """
+        SELECT COALESCE(SUM(amount), 0)
+        FROM expenses
+        WHERE substr(date, 1, 7) = ?
+        """,
+        (month,),
+    )
+
+    total = cursor.fetchone()[0]
+
+    connection.close()
+
+    return total

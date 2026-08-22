@@ -22,6 +22,8 @@ from database import (
     get_category_totals,
     search_expenses,
     search_expenses_by_date,
+    get_monthly_summary,
+    get_monthly_total,
 )
 
 from expense import Expense
@@ -271,6 +273,67 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(len(expenses), 2)
         self.assertEqual(expenses[0][4], "2026-08-21")
         self.assertEqual(expenses[1][4], "2026-08-21")
+
+    def test_monthly_summary(self):
+        expense1 = Expense(
+            500,
+            "Food",
+            "Lunch",
+            "2026-08-21"
+        )
+
+        expense2 = Expense(
+            750,
+            "Travel",
+            "Bus",
+            "2026-08-22"
+        )
+
+        expense3 = Expense(
+            300,
+            "Food",
+            "Snacks",
+            "2026-09-01"
+        )
+
+        add_expense(expense1)
+        add_expense(expense2)
+        add_expense(expense3)
+
+        summary = dict(get_monthly_summary("2026-08"))
+
+        self.assertEqual(summary["Food"], 500)
+        self.assertEqual(summary["Travel"], 750)
+
+    def test_monthly_total(self):
+        expense1 = Expense(
+            500,
+            "Food",
+            "Lunch",
+            "2026-08-21"
+        )
+
+        expense2 = Expense(
+            750,
+            "Travel",
+            "Bus",
+            "2026-08-22"
+        )
+
+        expense3 = Expense(
+            300,
+            "Food",
+            "Snacks",
+            "2026-09-01"
+        )
+
+        add_expense(expense1)
+        add_expense(expense2)
+        add_expense(expense3)
+
+        total = get_monthly_total("2026-08")
+
+        self.assertEqual(total, 1250)
 
 
 if __name__ == "__main__":

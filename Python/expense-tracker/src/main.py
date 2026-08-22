@@ -6,6 +6,8 @@ from database import (
     delete_expense,
     get_category_totals,
     get_expenses,
+    get_monthly_summary,
+    get_monthly_total,
     get_total_expenses,
     search_expenses,
     search_expenses_by_date,
@@ -220,6 +222,31 @@ def search_menu():
             print("Invalid choice. Please try again.")
 
 
+def show_monthly_summary():
+    month = input("Enter month (YYYY-MM): ").strip()
+
+    try:
+        datetime.strptime(month, "%Y-%m")
+    except ValueError:
+        print("Invalid month format. Use YYYY-MM.")
+        return
+
+    total = get_monthly_total(month)
+    summary = get_monthly_summary(month)
+
+    if not summary:
+        print("No expenses found for this month.")
+        return
+
+    print(f"\n===== Monthly Summary: {month} =====")
+    print(f"Total Expenses: {total:.2f}")
+
+    print("\nCategory-wise:")
+
+    for category, amount in summary:
+        print(f"{category}: {amount:.2f}")
+
+
 def main():
     create_table()
 
@@ -232,7 +259,8 @@ def main():
         print("5. Total Expenses")
         print("6. Category Summary")
         print("7. Search Expenses")
-        print("8. Exit")
+        print("8. Monthly Summary")
+        print("9. Exit")
 
         choice = input("Enter your choice: ").strip()
 
@@ -258,6 +286,9 @@ def main():
             search_menu()
 
         elif choice == "8":
+            show_monthly_summary()
+
+        elif choice == "9":
             print("Goodbye!")
             break
 
