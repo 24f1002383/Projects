@@ -286,3 +286,30 @@ def get_budget_status(month):
         "spent": spent,
         "remaining": budget - spent,
     }
+
+def get_expense_statistics():
+    connection = get_connection()
+
+    cursor = connection.execute(
+        """
+        SELECT
+            COUNT(*),
+            COALESCE(SUM(amount), 0),
+            COALESCE(AVG(amount), 0),
+            COALESCE(MAX(amount), 0),
+            COALESCE(MIN(amount), 0)
+        FROM expenses
+        """
+    )
+
+    result = cursor.fetchone()
+
+    connection.close()
+
+    return {
+        "count": result[0],
+        "total": result[1],
+        "average": result[2],
+        "highest": result[3],
+        "lowest": result[4],
+    }

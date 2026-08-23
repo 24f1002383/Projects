@@ -1,20 +1,19 @@
 from datetime import datetime
-
 from database import (
     add_expense,
     create_table,
     delete_expense,
     get_category_totals,
+    get_expense_statistics,
     get_expenses,
     get_monthly_summary,
     get_monthly_total,
+    get_budget_status,
     get_total_expenses,
     search_expenses,
     search_expenses_by_date,
-    update_expense,
     set_monthly_budget,
-    get_monthly_budget,
-    get_budget_status
+    update_expense,
 )
 from expense import Expense
 
@@ -296,6 +295,20 @@ def show_budget_status():
     if status["remaining"] < 0:
         print("Warning: You have exceeded your monthly budget.")
 
+def show_expense_statistics():
+    statistics = get_expense_statistics()
+
+    if statistics["count"] == 0:
+        print("No expenses found.")
+        return
+
+    print("\n===== Expense Statistics =====")
+    print(f"Total Expenses: {statistics['total']:.2f}")
+    print(f"Number of Expenses: {statistics['count']}")
+    print(f"Average Expense: {statistics['average']:.2f}")
+    print(f"Highest Expense: {statistics['highest']:.2f}")
+    print(f"Lowest Expense: {statistics['lowest']:.2f}")
+
 
 def main():
     create_table()
@@ -312,7 +325,8 @@ def main():
         print("8. Monthly Summary")
         print("9. Set Monthly Budget")
         print("10. View Budget Status")
-        print("11. Exit")
+        print("11. Expense Statistics")
+        print("12. Exit")
 
         choice = input("Enter your choice: ").strip()
 
@@ -347,6 +361,9 @@ def main():
             show_budget_status()
 
         elif choice == "11":
+            show_expense_statistics()
+
+        elif choice == "12":
             print("Goodbye!")
             break
 

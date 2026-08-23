@@ -27,6 +27,7 @@ from database import (
     set_monthly_budget,
     get_monthly_budget,
     get_budget_status,
+    get_expense_statistics,
 )
 
 from expense import Expense
@@ -378,6 +379,40 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(status["budget"], 2000)
         self.assertEqual(status["spent"], 1250)
         self.assertEqual(status["remaining"], 750)
-        
+
+    def test_expense_statistics(self):
+        expense1 = Expense(
+            100,
+            "Food",
+            "Breakfast",
+            "2026-08-21"
+        )
+
+        expense2 = Expense(
+            500,
+            "Travel",
+            "Bus",
+            "2026-08-22"
+        )
+
+        expense3 = Expense(
+            300,
+            "Shopping",
+            "T-shirt",
+            "2026-08-23"
+        )
+
+        add_expense(expense1)
+        add_expense(expense2)
+        add_expense(expense3)
+
+        statistics = get_expense_statistics()
+
+        self.assertEqual(statistics["count"], 3)
+        self.assertEqual(statistics["total"], 900)
+        self.assertEqual(statistics["average"], 300)
+        self.assertEqual(statistics["highest"], 500)
+        self.assertEqual(statistics["lowest"], 100)
+
 if __name__ == "__main__":
     unittest.main()
