@@ -1,15 +1,16 @@
-from datetime import datetime
 import csv
+from datetime import datetime
+
 from database import (
     add_expense,
     create_table,
     delete_expense,
+    get_budget_status,
     get_category_totals,
     get_expense_statistics,
     get_expenses,
     get_monthly_summary,
     get_monthly_total,
-    get_budget_status,
     get_total_expenses,
     search_expenses,
     search_expenses_by_date,
@@ -249,6 +250,7 @@ def show_monthly_summary():
     for category, amount in summary:
         print(f"{category}: {amount:.2f}")
 
+
 def set_budget():
     month = input("Enter month (YYYY-MM): ").strip()
 
@@ -296,6 +298,7 @@ def show_budget_status():
     if status["remaining"] < 0:
         print("Warning: You have exceeded your monthly budget.")
 
+
 def show_expense_statistics():
     statistics = get_expense_statistics()
 
@@ -309,6 +312,7 @@ def show_expense_statistics():
     print(f"Average Expense: {statistics['average']:.2f}")
     print(f"Highest Expense: {statistics['highest']:.2f}")
     print(f"Lowest Expense: {statistics['lowest']:.2f}")
+
 
 def export_expenses_to_csv():
     expenses = get_expenses()
@@ -328,7 +332,12 @@ def export_expenses_to_csv():
         filename += ".csv"
 
     try:
-        with open(filename, "w", newline="", encoding="utf-8") as file:
+        with open(
+            filename,
+            "w",
+            newline="",
+            encoding="utf-8"
+        ) as file:
             writer = csv.writer(file)
 
             writer.writerow(
@@ -343,10 +352,92 @@ def export_expenses_to_csv():
 
             writer.writerows(expenses)
 
-        print(f"Expenses exported successfully to {filename}.")
+        print(
+            f"Expenses exported successfully to {filename}."
+        )
 
     except OSError as error:
         print(f"Unable to export expenses: {error}")
+
+
+def import_expenses_from_csv():
+    filename = input("Enter CSV filename: ").strip()
+
+    if not filename:
+        print("Filename cannot be empty.")
+        return
+
+    try:
+        with open(
+            filename,
+            "r",
+            newline="",
+            encoding="utf-8"
+        ) as file:
+            reader = csv.DictReader(file)
+
+            required_columns = {
+                "ID",
+                "Amount",
+                "Category",
+                "Description",
+                "Date",
+            }
+
+            if not reader.fieldnames:
+                print("CSV file is empty or invalid.")
+                return
+
+            if not required_columns.issubset(
+                reader.fieldnames
+            ):
+                print("Invalid CSV format.")
+                return
+
+            imported = 0
+            skipped = 0
+
+            for row in reader:
+                try:
+                    amount = float(row["Amount"])
+                    category = row["Category"].strip()
+                    description = row["Description"].strip()
+                    date = row["Date"].strip()
+
+                    if amount <= 0:
+                        skipped += 1
+                        continue
+
+                    if not category:
+                        skipped += 1
+                        continue
+
+                    if not validate_date(date):
+                        skipped += 1
+                        continue
+
+                    expense = Expense(
+                        amount,
+                        category,
+                        description,
+                        date,
+                    )
+
+                    add_expense(expense)
+                    imported += 1
+
+                except (ValueError, TypeError):
+                    skipped += 1
+
+        print(f"Imported expenses: {imported}")
+        print(f"Skipped rows: {skipped}")
+
+    except FileNotFoundError:
+        print("CSV file not found.")
+
+    except OSError as error:
+        print(f"Unable to read CSV file: {error}")
+
 
 def main():
     create_table()
@@ -362,10 +453,11 @@ def main():
         print("7. Search Expenses")
         print("8. Monthly Summary")
         print("9. Set Monthly Budget")
-        print("10. View Budget Status")
+        print("10. Budget Status")
         print("11. Expense Statistics")
         print("12. Export Expenses to CSV")
-        print("13. Exit")
+        print("13. Import Expenses from CSV")
+        print("14. Exit")
 
         choice = input("Enter your choice: ").strip()
 
@@ -403,9 +495,12 @@ def main():
             show_expense_statistics()
 
         elif choice == "12":
-            export_expenses_to_csv()    
+            export_expenses_to_csv()
 
         elif choice == "13":
+            import_expenses_from_csv()
+
+        elif choice == "14":
             print("Goodbye!")
             break
 
