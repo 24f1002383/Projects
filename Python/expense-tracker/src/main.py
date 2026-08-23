@@ -12,6 +12,9 @@ from database import (
     search_expenses,
     search_expenses_by_date,
     update_expense,
+    set_monthly_budget,
+    get_monthly_budget,
+    get_budget_status
 )
 from expense import Expense
 
@@ -246,6 +249,53 @@ def show_monthly_summary():
     for category, amount in summary:
         print(f"{category}: {amount:.2f}")
 
+def set_budget():
+    month = input("Enter month (YYYY-MM): ").strip()
+
+    try:
+        datetime.strptime(month, "%Y-%m")
+    except ValueError:
+        print("Invalid month format. Use YYYY-MM.")
+        return
+
+    try:
+        amount = float(input("Enter monthly budget: "))
+
+        if amount <= 0:
+            print("Budget must be greater than zero.")
+            return
+
+        set_monthly_budget(month, amount)
+
+        print("Monthly budget saved successfully.")
+
+    except ValueError:
+        print("Please enter a valid amount.")
+
+
+def show_budget_status():
+    month = input("Enter month (YYYY-MM): ").strip()
+
+    try:
+        datetime.strptime(month, "%Y-%m")
+    except ValueError:
+        print("Invalid month format. Use YYYY-MM.")
+        return
+
+    status = get_budget_status(month)
+
+    if status is None:
+        print("No budget set for this month.")
+        return
+
+    print(f"\n===== Budget Status: {month} =====")
+    print(f"Budget: {status['budget']:.2f}")
+    print(f"Spent: {status['spent']:.2f}")
+    print(f"Remaining: {status['remaining']:.2f}")
+
+    if status["remaining"] < 0:
+        print("Warning: You have exceeded your monthly budget.")
+
 
 def main():
     create_table()
@@ -260,7 +310,9 @@ def main():
         print("6. Category Summary")
         print("7. Search Expenses")
         print("8. Monthly Summary")
-        print("9. Exit")
+        print("9. Set Monthly Budget")
+        print("10. View Budget Status")
+        print("11. Exit")
 
         choice = input("Enter your choice: ").strip()
 
@@ -289,6 +341,12 @@ def main():
             show_monthly_summary()
 
         elif choice == "9":
+            set_budget()
+
+        elif choice == "10":
+            show_budget_status()
+
+        elif choice == "11":
             print("Goodbye!")
             break
 

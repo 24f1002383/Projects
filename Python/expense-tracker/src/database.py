@@ -24,9 +24,18 @@ def create_table():
         """
     )
 
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS budgets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            month TEXT NOT NULL UNIQUE,
+            amount REAL NOT NULL
+        )
+        """
+    )
+
     connection.commit()
     connection.close()
-
 
 def add_expense(expense):
     connection = get_connection()
@@ -225,3 +234,55 @@ def get_monthly_total(month):
     connection.close()
 
     return total
+
+def set_monthly_budget(month, amount):
+    connection = get_connection()
+
+    connection.execute(
+        """
+        INSERT INTO budgets (month, amount)
+        VALUES (?, ?)
+        ON CONFLICT(month)
+        DO UPDATE SET amount = excluded.amount
+        """,
+        (month, amount),
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def get_monthly_budget(month):
+    connection = get_connection()
+
+    cursor = connection.execute(
+        """
+        SELECT amount
+        FROM budgets
+        WHERE month = ?
+        """,
+        (month,),
+    )
+
+    result = cursor.fetchone()
+
+    connection.close()
+
+    if result is None:
+        return None
+
+    return result[0]
+
+
+def get_budget_status(month):
+    budget = get_monthly_budget(month)
+    spent = get_monthly_total(month)
+
+    if budget is None:
+        return None
+
+    return {
+        "budget": budget,
+        "spent": spent,
+        "remaining": budget - spent,
+    }
