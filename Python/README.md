@@ -8,7 +8,7 @@ A collection of Python projects developed to practice programming concepts, prob
 
 | Project | Description | Technologies |
 |---|---|---|
-| — | Projects will be added here. | Python |
+| [Expense Tracker](./expense-tracker) | A command-line expense tracker to add, search, and manage daily expenses, track monthly budgets, view statistics, and import/export data via CSV. | Python, SQLite, unittest |
 
 *(This table is updated as new projects are added.)*
 
@@ -30,16 +30,17 @@ A collection of Python projects developed to practice programming concepts, prob
 
 ```
 Python-Projects/
-├── project-one/
+├── expense-tracker/
+│   ├── src/
+│   ├── tests/
 │   ├── README.md
-│   ├── requirements.txt
-│   └── main.py
+│   └── .gitignore
 ├── project-two/
 │   └── ...
 └── README.md
 ```
 
-Each project folder is self-contained — with its own `README.md` explaining what it does, how to run it, and what was learned, plus a `requirements.txt` for its dependencies.
+Each project folder is self-contained — with its own `README.md` explaining what it does, how to run it, and what was learned, plus a `requirements.txt` for its dependencies (where applicable).
 
 ---
 
