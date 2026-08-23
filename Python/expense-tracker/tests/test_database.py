@@ -416,6 +416,94 @@ class TestDatabase(unittest.TestCase):
             100
         )
 
+    def test_empty_database_statistics(self):
+        statistics = get_expense_statistics()
+
+        self.assertEqual(statistics["count"], 0)
+        self.assertEqual(statistics["total"], 0)
+        self.assertEqual(statistics["average"], 0)
+        self.assertEqual(statistics["highest"], 0)
+        self.assertEqual(statistics["lowest"], 0)
+
+    def test_search_with_no_results(self):
+        expense = Expense(
+            500,
+            "Food",
+            "Lunch",
+            "2026-08-21"
+        )
+
+        add_expense(expense)
+
+        results = search_expenses("Travel")
+
+        self.assertEqual(len(results), 0)
+
+    def test_date_search_with_no_results(self):
+        expense = Expense(
+            500,
+            "Food",
+            "Lunch",
+            "2026-08-21"
+        )
+
+        add_expense(expense)
+
+        results = search_expenses_by_date("2026-08-25")
+
+        self.assertEqual(len(results), 0)
+
+    def test_monthly_total_with_no_data(self):
+        total = get_monthly_total("2027-01")
+
+        self.assertEqual(total, 0)
+
+    def test_monthly_summary_with_no_data(self):
+        summary = get_monthly_summary("2027-01")
+
+        self.assertEqual(summary, [])
+
+    def test_budget_status_without_budget(self):
+        status = get_budget_status("2027-01")
+
+        self.assertIsNone(status)
+
+    def test_budget_exceeded(self):
+        expense = Expense(
+            1500,
+            "Shopping",
+            "Shoes",
+            "2026-08-21"
+        )
+
+        add_expense(expense)
+
+        set_monthly_budget(
+            "2026-08",
+            1000
+        )
+
+        status = get_budget_status("2026-08")
+
+        self.assertEqual(status["budget"], 1000)
+        self.assertEqual(status["spent"], 1500)
+        self.assertEqual(status["remaining"], -500)
+
+    def test_update_non_existing_expense(self):
+        result = update_expense(
+            9999,
+            500,
+            "Food",
+            "Lunch",
+            "2026-08-21"
+        )
+
+        self.assertFalse(result)
+
+    def test_delete_non_existing_expense(self):
+        result = delete_expense(9999)
+
+        self.assertFalse(result)
 
 if __name__ == "__main__":
     unittest.main()
