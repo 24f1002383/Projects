@@ -1,19 +1,50 @@
-*.csv# Python
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
 
 # Virtual environments
 .venv/
 venv/
 env/
+ENV/
 
 # Environment files
 .env
+.env.*
 
 # SQLite databases
 *.db
 *.sqlite
 *.sqlite3
 
+# Generated CSV exports
+*.csv
+
 # VS Code
 .vscode/
+
+# PyCharm
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
