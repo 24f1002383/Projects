@@ -1,27 +1,18 @@
 import os
 import sqlite3
-from contextlib import contextmanager
 
 
 DATABASE = os.getenv("EXPENSE_DB", "expenses.db")
 
 
-@contextmanager
-def database_connection():
-    connection = sqlite3.connect(DATABASE)
-
-    try:
-        yield connection
-        connection.commit()
-    except Exception:
-        connection.rollback()
-        raise
-    finally:
-        connection.close()
+def get_connection():
+    return sqlite3.connect(DATABASE)
 
 
 def create_table():
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS expenses (
@@ -44,13 +35,19 @@ def create_table():
             """
         )
 
+        connection.commit()
+    finally:
+        connection.close()
+
 
 def add_expense(expense):
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         connection.execute(
             """
             INSERT INTO expenses
-                (amount, category, description, date)
+            (amount, category, description, date)
             VALUES (?, ?, ?, ?)
             """,
             (
@@ -61,9 +58,15 @@ def add_expense(expense):
             ),
         )
 
+        connection.commit()
+    finally:
+        connection.close()
+
 
 def get_expenses():
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             SELECT id, amount, category, description, date
@@ -73,6 +76,8 @@ def get_expenses():
         )
 
         return cursor.fetchall()
+    finally:
+        connection.close()
 
 
 def update_expense(
@@ -82,14 +87,13 @@ def update_expense(
     description,
     date,
 ):
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             UPDATE expenses
-            SET amount = ?,
-                category = ?,
-                description = ?,
-                date = ?
+            SET amount = ?, category = ?, description = ?, date = ?
             WHERE id = ?
             """,
             (
@@ -101,11 +105,17 @@ def update_expense(
             ),
         )
 
+        connection.commit()
+
         return cursor.rowcount
+    finally:
+        connection.close()
 
 
 def delete_expense(expense_id):
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             DELETE FROM expenses
@@ -114,11 +124,17 @@ def delete_expense(expense_id):
             (expense_id,),
         )
 
+        connection.commit()
+
         return cursor.rowcount
+    finally:
+        connection.close()
 
 
 def get_total_expenses():
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             SELECT COALESCE(SUM(amount), 0)
@@ -127,10 +143,14 @@ def get_total_expenses():
         )
 
         return cursor.fetchone()[0]
+    finally:
+        connection.close()
 
 
 def get_category_totals():
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             SELECT category, SUM(amount)
@@ -141,10 +161,14 @@ def get_category_totals():
         )
 
         return cursor.fetchall()
+    finally:
+        connection.close()
 
 
 def search_expenses(category):
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             SELECT id, amount, category, description, date
@@ -156,10 +180,14 @@ def search_expenses(category):
         )
 
         return cursor.fetchall()
+    finally:
+        connection.close()
 
 
 def search_expenses_by_date(date):
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             SELECT id, amount, category, description, date
@@ -171,10 +199,14 @@ def search_expenses_by_date(date):
         )
 
         return cursor.fetchall()
+    finally:
+        connection.close()
 
 
 def get_monthly_summary(month):
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             SELECT category, SUM(amount)
@@ -187,10 +219,14 @@ def get_monthly_summary(month):
         )
 
         return cursor.fetchall()
+    finally:
+        connection.close()
 
 
 def get_monthly_total(month):
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             SELECT COALESCE(SUM(amount), 0)
@@ -201,10 +237,14 @@ def get_monthly_total(month):
         )
 
         return cursor.fetchone()[0]
+    finally:
+        connection.close()
 
 
 def set_monthly_budget(month, amount):
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         connection.execute(
             """
             INSERT INTO budgets (month, amount)
@@ -215,9 +255,15 @@ def set_monthly_budget(month, amount):
             (month, amount),
         )
 
+        connection.commit()
+    finally:
+        connection.close()
+
 
 def get_monthly_budget(month):
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             SELECT amount
@@ -233,6 +279,8 @@ def get_monthly_budget(month):
             return None
 
         return result[0]
+    finally:
+        connection.close()
 
 
 def get_budget_status(month):
@@ -250,7 +298,9 @@ def get_budget_status(month):
 
 
 def get_expense_statistics():
-    with database_connection() as connection:
+    connection = get_connection()
+
+    try:
         cursor = connection.execute(
             """
             SELECT
@@ -272,3 +322,5 @@ def get_expense_statistics():
             "highest": result[3],
             "lowest": result[4],
         }
+    finally:
+        connection.close()
