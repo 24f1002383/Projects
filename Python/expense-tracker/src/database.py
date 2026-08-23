@@ -1,277 +1,238 @@
 import os
 import sqlite3
+from contextlib import contextmanager
 
 
 DATABASE = os.getenv("EXPENSE_DB", "expenses.db")
 
 
-def get_connection():
-    return sqlite3.connect(DATABASE)
+@contextmanager
+def database_connection():
+    connection = sqlite3.connect(DATABASE)
+
+    try:
+        yield connection
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def create_table():
-    connection = get_connection()
-
-    connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS expenses (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            amount REAL NOT NULL,
-            category TEXT NOT NULL,
-            description TEXT,
-            date TEXT NOT NULL
+    with database_connection() as connection:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS expenses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                amount REAL NOT NULL,
+                category TEXT NOT NULL,
+                description TEXT,
+                date TEXT NOT NULL
+            )
+            """
         )
-        """
-    )
 
-    connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS budgets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            month TEXT NOT NULL UNIQUE,
-            amount REAL NOT NULL
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS budgets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                month TEXT NOT NULL UNIQUE,
+                amount REAL NOT NULL
+            )
+            """
         )
-        """
-    )
 
-    connection.commit()
-    connection.close()
 
 def add_expense(expense):
-    connection = get_connection()
-
-    connection.execute(
-        """
-        INSERT INTO expenses (amount, category, description, date)
-        VALUES (?, ?, ?, ?)
-        """,
-        (
-            expense.amount,
-            expense.category,
-            expense.description,
-            expense.date,
-        ),
-    )
-
-    connection.commit()
-    connection.close()
+    with database_connection() as connection:
+        connection.execute(
+            """
+            INSERT INTO expenses
+                (amount, category, description, date)
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                expense.amount,
+                expense.category,
+                expense.description,
+                expense.date,
+            ),
+        )
 
 
 def get_expenses():
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            SELECT id, amount, category, description, date
+            FROM expenses
+            ORDER BY id
+            """
+        )
 
-    cursor = connection.execute(
-        """
-        SELECT id, amount, category, description, date
-        FROM expenses
-        ORDER BY id
-        """
-    )
-
-    expenses = cursor.fetchall()
-
-    connection.close()
-
-    return expenses
+        return cursor.fetchall()
 
 
-def update_expense(expense_id, amount, category, description, date):
-    connection = get_connection()
+def update_expense(
+    expense_id,
+    amount,
+    category,
+    description,
+    date,
+):
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            UPDATE expenses
+            SET amount = ?,
+                category = ?,
+                description = ?,
+                date = ?
+            WHERE id = ?
+            """,
+            (
+                amount,
+                category,
+                description,
+                date,
+                expense_id,
+            ),
+        )
 
-    cursor = connection.execute(
-        """
-        UPDATE expenses
-        SET amount = ?, category = ?, description = ?, date = ?
-        WHERE id = ?
-        """,
-        (
-            amount,
-            category,
-            description,
-            date,
-            expense_id,
-        ),
-    )
-
-    connection.commit()
-
-    updated = cursor.rowcount
-
-    connection.close()
-
-    return updated
+        return cursor.rowcount
 
 
 def delete_expense(expense_id):
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            DELETE FROM expenses
+            WHERE id = ?
+            """,
+            (expense_id,),
+        )
 
-    cursor = connection.execute(
-        """
-        DELETE FROM expenses
-        WHERE id = ?
-        """,
-        (expense_id,),
-    )
-
-    connection.commit()
-
-    deleted = cursor.rowcount
-
-    connection.close()
-
-    return deleted
+        return cursor.rowcount
 
 
 def get_total_expenses():
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            SELECT COALESCE(SUM(amount), 0)
+            FROM expenses
+            """
+        )
 
-    cursor = connection.execute(
-        """
-        SELECT COALESCE(SUM(amount), 0)
-        FROM expenses
-        """
-    )
-
-    total = cursor.fetchone()[0]
-
-    connection.close()
-
-    return total
+        return cursor.fetchone()[0]
 
 
 def get_category_totals():
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            SELECT category, SUM(amount)
+            FROM expenses
+            GROUP BY category
+            ORDER BY category
+            """
+        )
 
-    cursor = connection.execute(
-        """
-        SELECT category, SUM(amount)
-        FROM expenses
-        GROUP BY category
-        ORDER BY category
-        """
-    )
-
-    category_totals = cursor.fetchall()
-
-    connection.close()
-
-    return category_totals
+        return cursor.fetchall()
 
 
 def search_expenses(category):
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            SELECT id, amount, category, description, date
+            FROM expenses
+            WHERE LOWER(category) = LOWER(?)
+            ORDER BY id
+            """,
+            (category,),
+        )
 
-    cursor = connection.execute(
-        """
-        SELECT id, amount, category, description, date
-        FROM expenses
-        WHERE LOWER(category) = LOWER(?)
-        ORDER BY id
-        """,
-        (category,),
-    )
-
-    expenses = cursor.fetchall()
-
-    connection.close()
-
-    return expenses
+        return cursor.fetchall()
 
 
 def search_expenses_by_date(date):
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            SELECT id, amount, category, description, date
+            FROM expenses
+            WHERE date = ?
+            ORDER BY id
+            """,
+            (date,),
+        )
 
-    cursor = connection.execute(
-        """
-        SELECT id, amount, category, description, date
-        FROM expenses
-        WHERE date = ?
-        ORDER BY id
-        """,
-        (date,),
-    )
+        return cursor.fetchall()
 
-    expenses = cursor.fetchall()
-
-    connection.close()
-
-    return expenses
 
 def get_monthly_summary(month):
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            SELECT category, SUM(amount)
+            FROM expenses
+            WHERE substr(date, 1, 7) = ?
+            GROUP BY category
+            ORDER BY category
+            """,
+            (month,),
+        )
 
-    cursor = connection.execute(
-        """
-        SELECT category, SUM(amount)
-        FROM expenses
-        WHERE substr(date, 1, 7) = ?
-        GROUP BY category
-        ORDER BY category
-        """,
-        (month,),
-    )
+        return cursor.fetchall()
 
-    summary = cursor.fetchall()
-
-    connection.close()
-
-    return summary
 
 def get_monthly_total(month):
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            SELECT COALESCE(SUM(amount), 0)
+            FROM expenses
+            WHERE substr(date, 1, 7) = ?
+            """,
+            (month,),
+        )
 
-    cursor = connection.execute(
-        """
-        SELECT COALESCE(SUM(amount), 0)
-        FROM expenses
-        WHERE substr(date, 1, 7) = ?
-        """,
-        (month,),
-    )
+        return cursor.fetchone()[0]
 
-    total = cursor.fetchone()[0]
-
-    connection.close()
-
-    return total
 
 def set_monthly_budget(month, amount):
-    connection = get_connection()
-
-    connection.execute(
-        """
-        INSERT INTO budgets (month, amount)
-        VALUES (?, ?)
-        ON CONFLICT(month)
-        DO UPDATE SET amount = excluded.amount
-        """,
-        (month, amount),
-    )
-
-    connection.commit()
-    connection.close()
+    with database_connection() as connection:
+        connection.execute(
+            """
+            INSERT INTO budgets (month, amount)
+            VALUES (?, ?)
+            ON CONFLICT(month)
+            DO UPDATE SET amount = excluded.amount
+            """,
+            (month, amount),
+        )
 
 
 def get_monthly_budget(month):
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            SELECT amount
+            FROM budgets
+            WHERE month = ?
+            """,
+            (month,),
+        )
 
-    cursor = connection.execute(
-        """
-        SELECT amount
-        FROM budgets
-        WHERE month = ?
-        """,
-        (month,),
-    )
+        result = cursor.fetchone()
 
-    result = cursor.fetchone()
+        if result is None:
+            return None
 
-    connection.close()
-
-    if result is None:
-        return None
-
-    return result[0]
+        return result[0]
 
 
 def get_budget_status(month):
@@ -287,29 +248,27 @@ def get_budget_status(month):
         "remaining": budget - spent,
     }
 
+
 def get_expense_statistics():
-    connection = get_connection()
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(amount), 0),
+                COALESCE(AVG(amount), 0),
+                COALESCE(MAX(amount), 0),
+                COALESCE(MIN(amount), 0)
+            FROM expenses
+            """
+        )
 
-    cursor = connection.execute(
-        """
-        SELECT
-            COUNT(*),
-            COALESCE(SUM(amount), 0),
-            COALESCE(AVG(amount), 0),
-            COALESCE(MAX(amount), 0),
-            COALESCE(MIN(amount), 0)
-        FROM expenses
-        """
-    )
+        result = cursor.fetchone()
 
-    result = cursor.fetchone()
-
-    connection.close()
-
-    return {
-        "count": result[0],
-        "total": result[1],
-        "average": result[2],
-        "highest": result[3],
-        "lowest": result[4],
-    }
+        return {
+            "count": result[0],
+            "total": result[1],
+            "average": result[2],
+            "highest": result[3],
+            "lowest": result[4],
+        }
