@@ -1,6 +1,8 @@
 import csv
 from datetime import datetime
 
+import database
+
 from database import (
     add_expense,
     create_table,
@@ -26,6 +28,25 @@ def validate_date(date):
         return True
     except ValueError:
         return False
+
+
+def validate_month(month):
+    try:
+        datetime.strptime(month, "%Y-%m")
+        return True
+    except ValueError:
+        return False
+
+
+def display_expenses(expenses):
+    for expense in expenses:
+        print(
+            f"ID: {expense[0]} | "
+            f"Amount: {expense[1]:.2f} | "
+            f"Category: {expense[2]} | "
+            f"Description: {expense[3]} | "
+            f"Date: {expense[4]}"
+        )
 
 
 def add_new_expense():
@@ -71,15 +92,7 @@ def view_expenses():
         return
 
     print("\n===== All Expenses =====")
-
-    for expense in expenses:
-        print(
-            f"ID: {expense[0]} | "
-            f"Amount: {expense[1]:.2f} | "
-            f"Category: {expense[2]} | "
-            f"Description: {expense[3]} | "
-            f"Date: {expense[4]}"
-        )
+    display_expenses(expenses)
 
 
 def update_existing_expense():
@@ -137,7 +150,6 @@ def delete_existing_expense():
 
 def show_total_expenses():
     total = get_total_expenses()
-
     print(f"\nTotal Expenses: {total:.2f}")
 
 
@@ -168,15 +180,7 @@ def search_existing_expenses():
         return
 
     print("\n===== Search Results =====")
-
-    for expense in expenses:
-        print(
-            f"ID: {expense[0]} | "
-            f"Amount: {expense[1]:.2f} | "
-            f"Category: {expense[2]} | "
-            f"Description: {expense[3]} | "
-            f"Date: {expense[4]}"
-        )
+    display_expenses(expenses)
 
 
 def search_expenses_by_date_menu():
@@ -193,15 +197,7 @@ def search_expenses_by_date_menu():
         return
 
     print("\n===== Date Search Results =====")
-
-    for expense in expenses:
-        print(
-            f"ID: {expense[0]} | "
-            f"Amount: {expense[1]:.2f} | "
-            f"Category: {expense[2]} | "
-            f"Description: {expense[3]} | "
-            f"Date: {expense[4]}"
-        )
+    display_expenses(expenses)
 
 
 def search_menu():
@@ -229,9 +225,7 @@ def search_menu():
 def show_monthly_summary():
     month = input("Enter month (YYYY-MM): ").strip()
 
-    try:
-        datetime.strptime(month, "%Y-%m")
-    except ValueError:
+    if not validate_month(month):
         print("Invalid month format. Use YYYY-MM.")
         return
 
@@ -254,9 +248,7 @@ def show_monthly_summary():
 def set_budget():
     month = input("Enter month (YYYY-MM): ").strip()
 
-    try:
-        datetime.strptime(month, "%Y-%m")
-    except ValueError:
+    if not validate_month(month):
         print("Invalid month format. Use YYYY-MM.")
         return
 
@@ -278,9 +270,7 @@ def set_budget():
 def show_budget_status():
     month = input("Enter month (YYYY-MM): ").strip()
 
-    try:
-        datetime.strptime(month, "%Y-%m")
-    except ValueError:
+    if not validate_month(month):
         print("Invalid month format. Use YYYY-MM.")
         return
 
@@ -328,7 +318,7 @@ def export_expenses_to_csv():
     if not filename:
         filename = "expenses.csv"
 
-    if not filename.endswith(".csv"):
+    if not filename.lower().endswith(".csv"):
         filename += ".csv"
 
     try:
@@ -336,7 +326,7 @@ def export_expenses_to_csv():
             filename,
             "w",
             newline="",
-            encoding="utf-8"
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
 
@@ -372,7 +362,7 @@ def import_expenses_from_csv():
             filename,
             "r",
             newline="",
-            encoding="utf-8"
+            encoding="utf-8",
         ) as file:
             reader = csv.DictReader(file)
 
@@ -388,9 +378,7 @@ def import_expenses_from_csv():
                 print("CSV file is empty or invalid.")
                 return
 
-            if not required_columns.issubset(
-                reader.fieldnames
-            ):
+            if not required_columns.issubset(reader.fieldnames):
                 print("Invalid CSV format.")
                 return
 
