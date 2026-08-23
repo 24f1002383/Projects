@@ -1,4 +1,5 @@
 from datetime import datetime
+import csv
 from database import (
     add_expense,
     create_table,
@@ -309,6 +310,43 @@ def show_expense_statistics():
     print(f"Highest Expense: {statistics['highest']:.2f}")
     print(f"Lowest Expense: {statistics['lowest']:.2f}")
 
+def export_expenses_to_csv():
+    expenses = get_expenses()
+
+    if not expenses:
+        print("No expenses found.")
+        return
+
+    filename = input(
+        "Enter CSV filename (default: expenses.csv): "
+    ).strip()
+
+    if not filename:
+        filename = "expenses.csv"
+
+    if not filename.endswith(".csv"):
+        filename += ".csv"
+
+    try:
+        with open(filename, "w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+
+            writer.writerow(
+                [
+                    "ID",
+                    "Amount",
+                    "Category",
+                    "Description",
+                    "Date",
+                ]
+            )
+
+            writer.writerows(expenses)
+
+        print(f"Expenses exported successfully to {filename}.")
+
+    except OSError as error:
+        print(f"Unable to export expenses: {error}")
 
 def main():
     create_table()
@@ -326,7 +364,8 @@ def main():
         print("9. Set Monthly Budget")
         print("10. View Budget Status")
         print("11. Expense Statistics")
-        print("12. Exit")
+        print("12. Export Expenses to CSV")
+        print("13. Exit")
 
         choice = input("Enter your choice: ").strip()
 
@@ -364,6 +403,9 @@ def main():
             show_expense_statistics()
 
         elif choice == "12":
+            export_expenses_to_csv()    
+
+        elif choice == "13":
             print("Goodbye!")
             break
 
